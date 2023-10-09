@@ -1,0 +1,17 @@
+#ABUTTON LAYER FOR RES qwe//\res\paginae\add\timer.res
+#String pr
+paginae/act/automation
+#uint16 pver
+2
+#String name
+Fuel smelter with 12 coal
+#String preq
+
+#uint16 hk
+0
+#uint16 ad length
+2
+#String ad[0]
+@
+#String ad[1]
+fsmelt9

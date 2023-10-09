@@ -1,0 +1,8 @@
+/build
+/bin
+/local-config.properties
+/local-boot.properties
+*~
+out
+/resources/compiled
+/resources/classes

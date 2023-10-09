@@ -1,0 +1,10 @@
+{
+  "wear": 30,
+  "armor": {
+    "hard": 4,
+    "soft": 5
+  },
+  "attributes": {
+    "gfx/hud/chr/agi": -1
+  }
+}

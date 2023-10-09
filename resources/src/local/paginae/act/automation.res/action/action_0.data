@@ -1,0 +1,13 @@
+#ABUTTON LAYER FOR RES qwe//\res\paginae\add\timer.res
+#String pr
+paginae/act/add
+#uint16 pver
+2
+#String name
+Automation
+#String preq
+
+#uint16 hk
+109
+#uint16 ad length
+0

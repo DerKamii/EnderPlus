@@ -1,0 +1,225 @@
+<?xml version="1.0" ?>
+
+<project name="hafen" default="deftgt">
+  <property name="ext-lib-base" value="http://www.havenandhearth.com/java" />
+
+  <target name="build-env">
+    <mkdir dir="build" />
+    <mkdir dir="build/classes" />
+    <available property="has-res-jar" file="bin/builtin-res.jar" />
+    <available property="unpacked-lib" file="build/classes-lib" />
+  </target>
+
+  <target name="make-buildinfo" depends="build-env">
+    <touch file="build/classes/buildinfo" datetime="01/01/2000 12:00 am" />
+    <loadproperties srcFile="build/classes/buildinfo" prefix="buildinfo." />
+    <exec executable="git" outputproperty="git-rev" failifexecutionfails="false">
+      <arg line="rev-parse HEAD" />
+    </exec>
+    <condition property="buildinfo-unchanged">
+      <equals arg1="${buildinfo.git-rev}" arg2="${git-rev}" />
+    </condition>
+  </target>
+
+  <target name="buildinfo">
+    <tstamp>
+      <format property="version" pattern="dd.MM.yyyy HH:mm" />
+    </tstamp>
+    <echo message="Updating buildinfo" />
+    <echo file="build/classes/buildinfo">
+      git-rev = ${git-rev}
+      version = ${version}
+    </echo>
+  </target>
+
+
+  <macrodef name="extlib">
+    <attribute name="name" />
+    <attribute name="path" />
+    <attribute name="url" />
+    <sequential>
+      <local name="@{name}-files" />
+      <mkdir dir="@{path}" />
+      <loadresource property="@{name}-files">
+	<url url="@{url}/lib-files" />
+	<filterchain>
+	  <prefixlines prefix="@{url}/" />
+	</filterchain>
+      </loadresource>
+      <get dest="@{path}/" usetimestamp="true">
+	<resourcelist>
+	  <propertyresource name="@{name}-files" />
+	</resourcelist>
+      </get>
+      <touch file="@{path}/has-@{name}" />
+    </sequential>
+  </macrodef>
+
+  <target name="extlib-env">
+    <mkdir dir="lib/ext" />
+    <available property="extlib/has-jogl" file="lib/ext/jogl/has-jogl" />
+  </target>
+
+  <target name="extlib/jogl" depends="extlib-env" unless="extlib/has-jogl">
+    <extlib name="jogl" path="lib/ext/jogl" url="${ext-lib-base}/jogl/current" />
+  </target>
+
+
+  <target name="hafen-client" depends="build-env, extlib/jogl">
+    <javac srcdir="src" destdir="build/classes" debug="on"
+	   source="1.8" target="1.8" includeantruntime="no"
+	   bootclasspath="${boot-classpath}">
+      <classpath>
+	<pathelement path="lib/ext/jogl/jogl-all.jar" />
+	<pathelement path="lib/ext/jogl/gluegen-rt.jar" />
+	<pathelement path="lib/jglob.jar" />
+	<pathelement path="lib/gson-2.8.6.jar" />
+        <pathelement path="lib/rxjava-1.1.5.jar" />
+      </classpath>
+      <compilerarg value="-Xlint:unchecked" />
+      <compilerarg value="-Xlint:-options" />
+      <!-- <compilerarg value="-Xbarda" /> -->
+    </javac>
+    <copy todir="build/classes">
+      <fileset dir="src" excludes="**/*.java" />
+    </copy>
+    <copy todir="build/classes/haven" file="etc/ressrv.crt" />
+    <copy todir="build/classes/haven" file="etc/authsrv.crt" />
+    <copy todir="build/classes/haven" file="etc/res-preload" />
+    <copy todir="build/classes/haven" file="etc/res-bgload" />
+    <copy todir="build/classes/haven" file="etc/icon.png" />
+    <copy todir="build/classes/haven" file="etc/font.ttf" />
+    <copy file="local-boot.properties" tofile="build/classes/haven/boot-props" failonerror="false" quiet="true" />
+  </target>
+  
+  <target name="client-res-java" depends="hafen-client">
+    <mkdir dir="resources/classes" />
+    <javac srcdir="resources/java" destdir="resources/classes" debug="on" source="1.8" target="1.8" includeantruntime="no">
+      <classpath>
+        <pathelement path="build/classes" />
+      </classpath>
+      <compilerarg value="-Xlint:unchecked" />
+      <compilerarg value="-Xlint:-options" />
+    </javac>
+  </target>
+
+  <target name="lib-classes" depends="build-env" unless="unpacked-lib">
+    <mkdir dir="build/classes-lib" />
+    <unjar src="lib/jglob.jar" dest="build/classes-lib">
+      <patternset excludes="META-INF/**" />
+    </unjar>
+    <unjar src="lib/gson-2.8.6.jar" dest="build/classes-lib">
+      <patternset excludes="META-INF/**" />
+    </unjar>
+    <unjar src="lib/rxjava-1.1.5.jar" dest="build/classes-lib">
+      <patternset excludes="META-INF/**" />
+    </unjar>
+  </target>
+
+  <target name="resources" depends="client-res-java">
+    <exec executable="java" failifexecutionfails="false">
+      <arg line="-jar resources/LayerUtil.jar -re resources/src/local resources/compiled/res" />
+    </exec>
+    <exec executable="java" failifexecutionfails="false">
+      <arg line="-jar resources/LayerUtil.jar -re resources/src/remote resources/compiled/res-preload" />
+    </exec>
+    <jar destfile="build/client-res.jar" update="true">
+      <fileset dir="resources/pre-compiled" />
+      <fileset dir="resources/compiled" />
+      <fileset dir="resources" includes="item_data/**"/>
+      <file file="etc/radar.json"/>
+      <file file="etc/gob_path.json"/>
+      <file file="etc/gob_radius.json"/>
+      <file file="etc/autochoose.json"/>
+      <file file="etc/automark.json5"/>
+      <file file="etc/containers.json5"/>
+      <file file="etc/tile_names.json"/>
+      <file file="etc/tile_highlight.json"/>
+      <fileset dir="." includes="i10n/**/**.json"/>
+    </jar>
+    <copy file="lib/ext/builtin-res.jar" todir="build"/>
+    <copy file="lib/ext/hafen-res.jar" todir="build"/>
+  </target>
+
+  <target name="jar" depends="hafen-client, buildinfo, lib-classes">
+    <jar destfile="build/hafen.jar" update="true">
+      <fileset dir="build/classes" />
+      <fileset dir="build/classes-lib" />
+      <fileset file="changelog.txt" />
+      <manifest>
+	<attribute name="Main-Class" value="haven.MainFrame" />
+	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar client-res.jar builtin-res.jar hafen-res.jar" />
+      </manifest>
+    </jar>
+    <chmod file="build/hafen.jar" perm="a+x" />
+  </target>
+
+  <target name="res-jar" depends="build-env" unless="has-res-jar">
+    <get src="${ext-lib-base}/builtin-res.jar" dest="lib/ext/builtin-res.jar"
+	 usetimestamp="true" />
+    <get src="${ext-lib-base}/hafen-res.jar" dest="lib/ext/hafen-res.jar"
+	 usetimestamp="true" />
+    <available property="lib-res-jar" file="lib/ext/hafen-res.jar" />
+    <fail unless="lib-res-jar" message="hafen-res.jar not available" />
+    <available property="lib-builtin-jar" file="lib/ext/builtin-res.jar" />
+    <fail unless="lib-builtin-jar" message="builtin-res.jar not available" />
+  </target>
+
+  <target name="jars" depends="build-env, jar, extlib/jogl, resources">
+    <copy todir="build" failonerror="false" quiet="true">
+      <fileset dir="lib">
+	<include name="builtin-res.jar" />
+	<include name="hafen-res.jar" />
+      </fileset>
+    </copy>
+    <copy todir="build">
+      <fileset dir="lib/ext/jogl">
+	<include name="*.jar" />
+      </fileset>
+    </copy>
+    <copy file="local-config.properties" tofile="build/haven-config.properties" failonerror="false" quiet="true" />
+  </target>
+
+  <target name="bin" depends="jar, extlib/jogl, res-jar">
+    <mkdir dir="bin" />
+    <copy todir="bin">
+      <fileset dir="build">
+	<include name="hafen.jar" />
+      </fileset>
+      <fileset dir="lib/ext">
+	<include name="hafen-res.jar" />
+	<include name="builtin-res.jar" />
+      </fileset>
+      <fileset dir="lib/ext/jogl">
+	<include name="*.jar" />
+      </fileset>
+    </copy>
+    <copy file="etc/ansgar-config.properties" tofile="bin/haven-config.properties" />
+    <chmod file="bin/hafen.jar" perm="a+x" />
+  </target>
+  
+  <target name="deftgt" depends="res-jar, jars, bin" />
+  <target name="buildprocess" depends="jars"/>
+
+  <target name="run" depends="bin">
+    <java jar="bin/hafen.jar" fork="true" />
+  </target>
+
+  <target name="clean" depends="clean-assets, clean-code">
+    <delete dir="lib/ext" />
+    <delete dir="bin" />
+  </target>
+
+  
+  <target name="clean-code">
+    <delete dir="build/classes" />
+    <delete dir="build/classes-lib" />
+    <delete file="build/hafen.jar" />
+  </target>
+
+  <target name="clean-assets">
+    <delete dir="resources/classes" />
+    <delete dir="resources/compiled" />
+    <delete file="build/client-res.jar" />
+  </target>
+</project>

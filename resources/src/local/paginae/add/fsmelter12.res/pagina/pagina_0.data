@@ -1,0 +1,3 @@
+#PAGINA LAYER
+#String text
+Will fuel nearest smelter with $col[32,245,255]{12} coal from inventory.

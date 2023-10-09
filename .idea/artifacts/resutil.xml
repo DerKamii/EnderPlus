@@ -1,0 +1,25 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="resutil">
+    <output-path>$PROJECT_DIR$/out/artifacts/resutil</output-path>
+    <properties id="ant-preprocessing">
+      <options>
+        <file>file://$PROJECT_DIR$/build.xml</file>
+        <target>jar</target>
+      </options>
+    </properties>
+    <root id="root">
+      <element id="archive" name="resutil.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/resutil/manifest/META-INF/MANIFEST.MF" />
+          <element id="directory" name="glob">
+            <element id="dir-copy" path="$PROJECT_DIR$/build/classes/META-INF/glob" />
+          </element>
+        </element>
+        <element id="module-output" name="resutil" />
+        <element id="module-output" name="hafen" />
+      </element>
+      <element id="library" level="project" name="lib" />
+      <element id="file-copy" path="$PROJECT_DIR$/build/hafen.jar" />
+    </root>
+  </artifact>
+</component>

@@ -1,0 +1,14 @@
+#CODEENTRY LAYER FOR RES www//\ui\realm.res
+#int32 length
+1
+#String key[0]
+wdg
+#String value[0]
+Realm
+#start of requirements
+#int32 length
+1
+#String resource
+ui/polity
+#uint16 version
+10

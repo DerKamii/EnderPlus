@@ -1,0 +1,16 @@
+language: java
+script: ant buildprocess
+sudo: required
+jdk:
+- oraclejdk7
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+      secure: W8kX81NBXAJHvfsSzG67+0m9vwHjtsMqmHYmB/x2eMJWh3xhBS0J1jMZenVA95j0/N4qSfhl/hUMKEOfeS87RbqOvJxi7m5bKj46vK++8h0eIdKzxzCk7vw3bb98P0eaD/P6UcyFXOa7eYhIA/dSI7MxWvBnDbJqA6spsPn7QTfuYY9Npa3jqXvT8zJ9ZR9uneoVakoD8jqeX7bUZwZZb3bIJAZUkIytsonbpcH7PRiA6nSkG0+WIN8oGQuoCI+y5t8UbzxRPVoJUDBqCimmzdC5FAhfxL+njl2vlnOciPQ89sTelezjtudpudt5QcYIYStO3SVPZyo8t3vlGiYxLglvW6oo7H1G2Jq0fYxXHI0lnSgf9n+UN0jAuho9PjNNiRbYy1jYNvotGriRvKQb0GjDazErFhk3N9dWk/Oi+emCxy4sVN62WNSOEa0u6LvZJI6C2OT5mQ03R+NozAxEmU9XEvgu3hoIp/7pGUImoML8sdk+l66x/GHmGNK8vx199hnpx3+yE7mSieRwZI5ONWh/kt3gCRzaNMgeEbYYGJRcMGd4GfIFwWqKM8e6jeK5Q9F2g3an0ntuCjdtkuKNTF8JktOICuPpdShfcsPbC0baFqi0j+1+UVUe5mToanuxbVqH4rD/QmVzLphrt3N4vjeCqXebuQ21BMFGgve/X6w=
+  file: 
+    - "build/hafen.jar"
+    - "build/custom-res.jar"
+  on:
+    branch: release
+    jdk: oraclejdk7

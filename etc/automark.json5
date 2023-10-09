@@ -1,0 +1,32 @@
+{
+  basic: {
+    "gfx/terobjs/wonders/tarpit": {
+      name: "Tarpit",
+      res: "radar/tarpit"
+    },
+    "gfx/terobjs/map/amberwash": {
+      name: "Amber Wash",
+      res: "radar/amberwash"
+    },
+    "gfx/terobjs/map/flintwash": {
+      name: "Flint Wash",
+      res: "radar/flintwash"
+    },
+    "gfx/terobjs/minehole": {
+      name: "Minehole",
+      res: "radar/mine-hole"
+    },
+    "gfx/terobjs/ladder": {
+      name: "Ladder",
+      res: "radar/mine-ladder"
+    },
+    "gfx/tiles/ridges/cavein": {
+      name: "Cave",
+      res: "radar/cave-in"
+    },
+    "gfx/tiles/ridges/caveout": {
+      name: "Exit",
+      res: "radar/cave-out"
+    }
+  }
+}
