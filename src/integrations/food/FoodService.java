@@ -7,13 +7,13 @@ import haven.resutil.FoodInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,6 +56,7 @@ public class FoodService {
 	try {
 	    if (FOOD_DATA_CACHE_FILE.exists()) {
 		String jsonData = String.join("", Files.readAllLines(FOOD_DATA_CACHE_FILE.toPath(), StandardCharsets.UTF_8));
+		System.out.println("load from file: " + jsonData);
 		JSONObject object = new JSONObject(jsonData);
 		object.keySet().forEach(key -> cachedItems.put(key, new ParsedFoodInfo()));
 		System.out.println("Loaded food data file: " + cachedItems.size() + " entries");
@@ -81,7 +82,7 @@ public class FoodService {
 	    }
 	    if (System.currentTimeMillis() - lastModified > TimeUnit.MINUTES.toMillis(30)) {
 		try {
-		    HttpsURLConnection connection = (HttpsURLConnection) new URL(FOOD_DATA_URL).openConnection();
+		    HttpURLConnection connection = (HttpURLConnection) new URL(FOOD_DATA_URL).openConnection();
 		    connection.setRequestProperty("Accept-Encoding", "gzip");
 		    connection.setRequestProperty("User-Agent", "H&H Client/" + token);
 		    connection.setRequestProperty("Cache-Control", "no-cache");
@@ -92,8 +93,10 @@ public class FoodService {
 			connection.disconnect();
 		    }
 		    String content = stringBuilder.toString();
+		    System.out.println("load from remote: " + content);
 		    
 		    Files.write(FOOD_DATA_CACHE_FILE.toPath(), Collections.singleton(content), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+		    System.out.println("load from remote 2: " + content);
 		    JSONObject object = new JSONObject(content);
 		    object.keySet().forEach(key -> cachedItems.put(key, new ParsedFoodInfo()));
 		    System.out.println("Updated food data file: " + cachedItems.size() + " entries");
@@ -109,7 +112,7 @@ public class FoodService {
     /**
      * Check item info and determine if it is food and we need to send it
      */
-    public static void checkFood(List<ItemInfo> infoList, Resource res) {
+    public static void checkFood(List<ItemInfo> infoList, Resource res, double itemQ) {
 //        if (!Resource.language.equals("en")) {
 //            // Do not process localized items
 //            return;
@@ -118,8 +121,8 @@ public class FoodService {
 	    String resName = res.name;
 	    FoodInfo foodInfo = ItemInfo.find(FoodInfo.class, infoList);
 	    if (foodInfo != null) {
-		QualityList qBuff = ItemInfo.find(QualityList.class, infoList);
-		double quality = qBuff.single().value;
+		//QualityList qBuff = ItemInfo.find(QualityList.class, infoList);
+		double quality = itemQ; //qBuff.single().value;
 		double multiplier = Math.sqrt(quality / 10.0);
 		
 		ParsedFoodInfo parsedFoodInfo = new ParsedFoodInfo();
@@ -179,26 +182,30 @@ public class FoodService {
 	    return;
 	}
 	
-	List<ParsedFoodInfo> toSend = new ArrayList<>();
+	Map<String, ParsedFoodInfo> toSend = new ConcurrentHashMap<String, ParsedFoodInfo>();
 	while (!sendQueue.isEmpty()) {
 	    HashedFoodInfo info = sendQueue.poll();
 	    if (cachedItems.containsKey(info.hash)) {
 		continue;
 	    }
 	    cachedItems.put(info.hash, info.foodInfo);
-	    toSend.add(info.foodInfo);
+	    toSend.put(info.hash, info.foodInfo);
 	}
 	
 	if (!toSend.isEmpty()) {
 	    try {
-		HttpsURLConnection connection =
-		    (HttpsURLConnection) new URL(API_ENDPOINT + "food").openConnection();
+		HttpURLConnection connection =
+		    (HttpURLConnection) new URL(API_ENDPOINT + "food").openConnection();
 		connection.setRequestMethod("POST");
 		connection.setRequestProperty("Content-Type", "application/json");
 		connection.setRequestProperty("User-Agent", "H&H Client/" + token);
 		connection.setDoOutput(true);
 		try (OutputStream out = connection.getOutputStream()) {
-		    out.write(new JSONArray(toSend.toArray()).toString().getBytes(StandardCharsets.UTF_8));
+		    // object.keySet().forEach(key -> cachedItems.put(key, new ParsedFoodInfo()));
+		    JSONObject o = new JSONObject();
+		    toSend.forEach((k,v) -> o.put(k, new JSONObject(v)));
+		    System.out.println(o.toString());
+		    out.write(o.toString().getBytes(StandardCharsets.UTF_8));
 		}
 		StringBuilder stringBuilder = new StringBuilder();
 		try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {

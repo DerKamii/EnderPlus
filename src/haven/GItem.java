@@ -291,7 +291,7 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
 		info.add(new ItemInfo.Pagina(this, pg.text));
 	    this.info = info;
 	    try {
-		FoodService.checkFood(info, getres());
+		FoodService.checkFood(info, getres(), itemq.get().single().value);
 	    } catch (Exception ex) {
 	    }
 	}
