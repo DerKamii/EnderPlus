@@ -1337,14 +1337,21 @@ public class OptWnd extends WindowX {
 	
 	panel.add(new CFGBox("Upload enabled", CFG.AUTOMAP_UPLOAD), x, y);
 	y += STEP;
-	
+
 	panel.add(new CFGBox("Tracking enabled", CFG.AUTOMAP_TRACK), x, y);
+	y += STEP;
+
+	panel.add(new CFGBox("Food Tracking Enabled", CFG.AUTOFOOD_TRACK), x, y);
 	y += STEP;
 	
 	panel.add(new Label("Mapping URL:"), x, y);
 	y += STEP;
-	
-	panel.add(new TextEntry(UI.scale(250), CFG.AUTOMAP_ENDPOINT.get()) {
+
+	String automapEndpoint = CFG.AUTOMAP_ENDPOINT.get();
+	if (automapEndpoint == null || automapEndpoint.isEmpty()) {
+		automapEndpoint = "{input map key here}";
+	}
+	panel.add(new TextEntry(UI.scale(250), automapEndpoint) {
 	    @Override
 	    public boolean keydown(KeyEvent ev) {
 		if(!parent.visible)
