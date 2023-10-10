@@ -30,6 +30,8 @@ package haven;
 import java.util.HashSet;
 import java.util.LinkedList;
 import haven.render.*;
+import integrations.mapv4.MappingClient;
+
 import java.awt.event.KeyEvent;
 import java.util.Set;
 
@@ -1344,7 +1346,9 @@ public class OptWnd extends WindowX {
 	panel.add(new CFGBox("Food Tracking Enabled", CFG.AUTOFOOD_TRACK), x, y);
 	y += STEP;
 	
-	panel.add(new Label("Mapping URL:"), x, y);
+	MappingClient automapper = MappingClient.getInstance();
+	Label mappingLabel = new Label("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+	panel.add(mappingLabel, x, y);
 	y += STEP;
 
 	String automapEndpoint = CFG.AUTOMAP_ENDPOINT.get();
@@ -1353,11 +1357,24 @@ public class OptWnd extends WindowX {
 	}
 	panel.add(new TextEntry(UI.scale(250), automapEndpoint) {
 	    @Override
-	    public boolean keydown(KeyEvent ev) {
+	    public boolean keyup(KeyEvent ev) {
 		if(!parent.visible)
 		    return false;
 		CFG.AUTOMAP_ENDPOINT.set(text());
-		return buf.key(ev);
+		return false;
+	    }
+	}, x, y);
+	
+	y += STEP;
+	panel.add(new Button(UI.scale(100), "Save", false) {
+	    @Override
+	    public void click() {
+		
+		automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
+		System.out.println(CFG.AUTOMAP_ENDPOINT.get());
+		automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
+		automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
+		mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
 	    }
 	}, x, y);
  
