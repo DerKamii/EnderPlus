@@ -27,6 +27,10 @@
 package haven;
 
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.util.HashSet;
 import java.util.LinkedList;
 import haven.render.*;
@@ -1355,28 +1359,58 @@ public class OptWnd extends WindowX {
 	if (automapEndpoint == null || automapEndpoint.isEmpty()) {
 		automapEndpoint = "{input map key here}";
 	}
-	panel.add(new TextEntry(UI.scale(250), automapEndpoint) {
-	    @Override
-	    public boolean keyup(KeyEvent ev) {
-		if(!parent.visible)
-		    return false;
-		CFG.AUTOMAP_ENDPOINT.set(text());
-		return false;
-	    }
-	}, x, y);
+	TextEntry map_url = new TextEntry(UI.scale(250), automapEndpoint) {
+		@Override
+		public boolean keyup(KeyEvent ev) {
+			if(!parent.visible)
+				return false;
+			CFG.AUTOMAP_ENDPOINT.set(text());
+			return false;
+		}
+	};
+
+	panel.add(map_url, x, y);
 	
 	y += STEP;
 	panel.add(new Button(UI.scale(100), "Save", false) {
-	    @Override
-	    public void click() {
-		
-		automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
-		System.out.println(CFG.AUTOMAP_ENDPOINT.get());
-		automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
-		automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
-		mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
-	    }
+		@Override
+		public void click() {
+
+			automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
+			System.out.println(CFG.AUTOMAP_ENDPOINT.get());
+			automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
+			automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
+			mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+		}
 	}, x, y);
+
+	panel.add(new Button(UI.scale(150), "load from clipboard", false) {
+		@Override
+		public void click() {
+			try {
+
+			// Get the system clipboard
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+
+			// Get the clipboard's content
+			Transferable contents = clipboard.getContents(null);
+
+			if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+				// Clipboard contains text
+				String clipboardText = (String) contents.getTransferData(DataFlavor.stringFlavor);
+				map_url.settext(clipboardText);
+				CFG.AUTOMAP_ENDPOINT.set(clipboardText);
+				System.out.println("Clipboard content: " + clipboardText);
+			}
+			else {
+				System.out.println("Clipboard does not contain text");
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+			;
+		}
+	}, x + 105, y);
  
 	y += STEP;
 	panel.add(new Label("Upload custom markers:"), x, y);
