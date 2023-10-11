@@ -57,7 +57,7 @@ public class FoodService {
 	try {
 	    if (FOOD_DATA_CACHE_FILE.exists()) {
 		String jsonData = String.join("", Files.readAllLines(FOOD_DATA_CACHE_FILE.toPath(), StandardCharsets.UTF_8));
-		System.out.println("load from file: " + jsonData);
+		//System.out.println("load from file: " + jsonData);
 		JSONObject object = new JSONObject(jsonData);
 		object.keySet().forEach(key -> cachedItems.put(key, new ParsedFoodInfo()));
 		System.out.println("Loaded food data file: " + cachedItems.size() + " entries");
@@ -94,7 +94,7 @@ public class FoodService {
 			connection.disconnect();
 		    }
 		    String content = stringBuilder.toString();
-		    System.out.println("load from remote: " + content);
+		    //System.out.println("load from remote: " + content);
 		    
 		    Files.write(FOOD_DATA_CACHE_FILE.toPath(), Collections.singleton(content), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 		    System.out.println("load from remote 2: " + content);

@@ -345,7 +345,7 @@ public class MappingClient {
 		connection.setDoOutput(true);
 		try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
 		    final String json = data.toString();
-		    System.out.println(json);
+		    //System.out.println(json);
 		    out.write(json.getBytes(StandardCharsets.UTF_8));
 		}
 		int code = connection.getResponseCode();
@@ -433,7 +433,7 @@ public class MappingClient {
 			connection.setDoOutput(true);
 			try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
 			    final String json = upload.toString();
-			    System.out.println(json);
+			    //System.out.println(json);
 			    out.write(json.getBytes(StandardCharsets.UTF_8));
 			} catch (Exception e) {
 			}
