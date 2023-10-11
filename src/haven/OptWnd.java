@@ -1075,11 +1075,23 @@ public class OptWnd extends WindowX {
 	panel.add(new CFGBox("Show object info", CFG.DISPLAY_GOB_INFO, "Enables damage and crop/tree growth stage displaying", true), x, y);
     
 	y += STEP;
-	panel.add(new CFGBox("Flat cupboards (needs restart)", CFG.FLAT_CUPBOARDS, "Makes cupboards look like floor hatches", true), x, y);
+	panel.add(new Label("Cupboard Height (needs restart)"), x, y);
+
+	y += STEP;
+	panel.add(new HSlider(UI.scale(160), 5, 100, CFG.CUPBOARD_HEIGHT.get()) {
+		protected void attach(UI ui) {
+			super.attach(ui);
+			val = CFG.CUPBOARD_HEIGHT.get();
+		}
+		public void changed() {
+			CFG.CUPBOARD_HEIGHT.set(val);
+		}
+	}, x, y);
 
 	y += STEP;
 	panel.add(new CFGBox("Display container fullness", CFG.SHOW_CONTAINER_FULLNESS, "Makes containers tint different colors when they are empty or full", true), x, y);
-    
+
+
 	y += STEP;
 	tx = panel.add(new CFGBox("Draw paths", CFG.DISPLAY_GOB_PATHS, "Draws lines where objects are moving", true), x, y).sz.x;
 	panel.add(new IButton("gfx/hud/opt", "", "-d", "-h") {
@@ -1375,12 +1387,16 @@ public class OptWnd extends WindowX {
 	panel.add(new Button(UI.scale(100), "Save", false) {
 		@Override
 		public void click() {
-
-			automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
-			System.out.println(CFG.AUTOMAP_ENDPOINT.get());
-			automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
-			automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
-			mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+			try {
+				automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
+				System.out.println(CFG.AUTOMAP_ENDPOINT.get());
+				automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
+				automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
+				mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+			}
+			catch(Exception e) {
+				System.out.println("mapping save button error: " + e);
+			}
 		}
 	}, x, y);
 

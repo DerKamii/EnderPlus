@@ -51,7 +51,11 @@ public class SkelSprite extends Sprite implements Sprite.CUpd, EquipTarget, Skel
     private RenderTree.Node[] parts;
     private Collection<Runnable> tickparts = Collections.emptyList();
     private Collection<Consumer<Render>> gtickparts = Collections.emptyList();
-    
+
+	public static Location cupboardSize = new Location(new Matrix4f(1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, (float) CFG.CUPBOARD_HEIGHT.get() / 100, 0,
+			0, 0, 0, 1));
     public static final Factory fact = new Factory() {
 	    public Sprite create(Owner owner, Resource res, Message sdt) {
 		if(res.layer(Skeleton.Res.class) == null)
@@ -257,8 +261,10 @@ public class SkelSprite extends Sprite implements Sprite.CUpd, EquipTarget, Skel
     }
     
     public void added(RenderTree.Slot slot) {
-	parts(slot);
-	slots.add(slot);
+		if(res.name.equals("gfx/terobjs/cupboard"))
+			slot.ostate(cupboardSize);
+		parts(slot);
+		slots.add(slot);
     }
 
     public void removed(RenderTree.Slot slot) {

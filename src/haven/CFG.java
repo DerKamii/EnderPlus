@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import haven.PathVisualizer.PathCategory;
+import haven.render.sl.InstancedUniform;
 import haven.rx.BuffToggles;
 import me.ender.Reflect;
 
@@ -34,7 +35,8 @@ public class CFG<T> {
     public static final CFG<Boolean> AUTO_PICK_ONLY_RADAR = new CFG<>("general.auto_pick_radar", true);
     public static final CFG<Integer> AUTO_PICK_RADIUS = new CFG<>("general.auto_pick_radius", 55);
     public static final CFG<Boolean> AUTO_DROP_RESPECT_FILTER = new CFG<>("general.auto_drop.filter", true);
-    
+    public static final CFG<Integer> CUPBOARD_HEIGHT = new CFG<>("display.cupboard_height", 100);
+
     public static final CFG<Theme> THEME = new CFG<>("ui.theme", Theme.Pretty);
     public static final CFG<Boolean> FORCE_HW_CURSOR = new CFG<>("ui.force_hw_cursor", false);
     public static final CFG<Boolean> DISABLE_UI_HIDING = new CFG<>("ui.disable_ui_hide", true);
