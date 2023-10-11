@@ -1389,26 +1389,25 @@ public class OptWnd extends WindowX {
 		public void click() {
 			try {
 
-			// Get the system clipboard
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				// Get the system clipboard
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
-			// Get the clipboard's content
-			Transferable contents = clipboard.getContents(null);
+				// Get the clipboard's content
+				Transferable contents = clipboard.getContents(null);
 
-			if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-				// Clipboard contains text
-				String clipboardText = (String) contents.getTransferData(DataFlavor.stringFlavor);
-				map_url.settext(clipboardText);
-				CFG.AUTOMAP_ENDPOINT.set(clipboardText);
-				System.out.println("Clipboard content: " + clipboardText);
+				if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+					// Clipboard contains text
+					String clipboardText = (String) contents.getTransferData(DataFlavor.stringFlavor);
+					map_url.settext(clipboardText);
+					CFG.AUTOMAP_ENDPOINT.set(clipboardText);
+					System.out.println("Clipboard content: " + clipboardText);
+				}
+				else {
+					System.out.println("Clipboard does not contain text");
+				}
+			} catch (Exception e) {
+				System.out.println(e);
 			}
-			else {
-				System.out.println("Clipboard does not contain text");
-			}
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-			;
 		}
 	}, x + 105, y);
  
