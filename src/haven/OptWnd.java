@@ -1075,7 +1075,18 @@ public class OptWnd extends WindowX {
 	panel.add(new CFGBox("Show object info", CFG.DISPLAY_GOB_INFO, "Enables damage and crop/tree growth stage displaying", true), x, y);
     
 	y += STEP;
-	panel.add(new CFGBox("Flat cupboards (needs restart)", CFG.FLAT_CUPBOARDS, "Makes cupboards look like floor hatches", true), x, y);
+	panel.add(new Label("Cupboard Height (needs restart)"), x, y);
+
+	y += STEP;
+	panel.add(new HSlider(UI.scale(160), 5, 100, CFG.CUPBOARD_HEIGHT.get()) {
+		protected void attach(UI ui) {
+			super.attach(ui);
+			val = CFG.CUPBOARD_HEIGHT.get();
+		}
+		public void changed() {
+			CFG.CUPBOARD_HEIGHT.set(val);
+		}
+	}, x, y);
 
 	y += STEP;
 	panel.add(new CFGBox("Display container fullness", CFG.SHOW_CONTAINER_FULLNESS, "Makes containers tint different colors when they are empty or full", true), x, y);
