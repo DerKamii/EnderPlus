@@ -1340,6 +1340,17 @@ public class OptWnd extends WindowX {
     
 	x = 0;
 	y = START;
+ 
+	Label mappingLabel = new Label("Mapping URL: Re-Enable options");;
+	MappingClient automapper = null;
+	try {
+	    automapper = MappingClient.getInstance();
+	    mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+	} catch (Exception ex) {
+	    CFG.AUTOMAP_UPLOAD.set(false);
+	    CFG.AUTOMAP_TRACK.set(false);
+	    CFG.AUTOFOOD_TRACK.set(false);
+	}
 	
 	panel.add(new CFGBox("Upload enabled", CFG.AUTOMAP_UPLOAD), x, y);
 	y += STEP;
@@ -1350,8 +1361,6 @@ public class OptWnd extends WindowX {
 	panel.add(new CFGBox("Food Tracking Enabled", CFG.AUTOFOOD_TRACK), x, y);
 	y += STEP;
 	
-	MappingClient automapper = MappingClient.getInstance();
-	Label mappingLabel = new Label("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
 	panel.add(mappingLabel, x, y);
 	y += STEP;
 
@@ -1370,19 +1379,6 @@ public class OptWnd extends WindowX {
 	};
 
 	panel.add(map_url, x, y);
-	
-	y += STEP;
-	panel.add(new Button(UI.scale(100), "Save", false) {
-		@Override
-		public void click() {
-
-			automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
-			System.out.println(CFG.AUTOMAP_ENDPOINT.get());
-			automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
-			automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
-			mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
-		}
-	}, x, y);
 
 	panel.add(new Button(UI.scale(150), "load from clipboard", false) {
 		@Override
@@ -1409,7 +1405,7 @@ public class OptWnd extends WindowX {
 				System.out.println(e);
 			}
 		}
-	}, x + 105, y);
+	}, x, y);
  
 	y += STEP;
 	panel.add(new Label("Upload custom markers:"), x, y);
@@ -1445,8 +1441,24 @@ public class OptWnd extends WindowX {
 	}, x, y);
  
 	y += STEP;
+	panel.add(new Button(UI.scale(100), "Save", false) {
+	    @Override
+	    public void click() {
+		try {
+		    MappingClient automapper = MappingClient.getInstance();
+		    automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
+		    System.out.println(CFG.AUTOMAP_ENDPOINT.get());
+		    automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
+		    automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
+		    mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));
+		} catch (Exception ex) {}
+	    
+	    }
+	}, x, y);
 	
-	panel.add(new PButton(UI.scale(200), "Back", 27, main), x, y);
+	y += STEP;
+	
+	panel.add(new PButton(UI.scale(100), "Back", 27, main), x, y);
 	panel.pack();
 	title.c.x = (panel.sz.x - title.sz.x) / 2;
     }
