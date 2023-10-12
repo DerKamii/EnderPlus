@@ -1390,6 +1390,8 @@ public class OptWnd extends WindowX {
 	};
 
 	panel.add(map_url, x, y);
+ 
+	y += STEP;
 
 	panel.add(new Button(UI.scale(150), "load from clipboard", false) {
 		@Override
@@ -1467,9 +1469,7 @@ public class OptWnd extends WindowX {
 	    }
 	}, x, y);
 	
-	y += STEP;
-	
-	panel.add(new PButton(UI.scale(100), "Back", 27, main), x, y);
+	panel.add(new PButton(UI.scale(100), "Back", 27, main), x + UI.scale(150), y);
 	panel.pack();
 	title.c.x = (panel.sz.x - title.sz.x) / 2;
     }
