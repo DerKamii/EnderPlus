@@ -118,6 +118,8 @@ public class MappingClient {
      */
     public boolean CheckEndpoint() {
 	try {
+	    if (INSTANCE == null)
+		return false;
 	    HttpURLConnection connection =
 		(HttpURLConnection) new URL(endpoint + "/checkVersion?version=4").openConnection();
 	    connection.setRequestMethod("GET");

@@ -1458,9 +1458,15 @@ public class OptWnd extends WindowX {
 	    @Override
 	    public void click() {
 		try {
+		    boolean setUsername = false;
+		    if (!MappingClient.initialized() && ui.sess.username != null &&  ui.sess.username.length() > 0) {
+			MappingClient.init(ui.sess.glob);
+			setUsername = true;
+		    }
 		    MappingClient automapper = MappingClient.getInstance();
+		    if (setUsername)
+			automapper.SetPlayerName(ui.sess.username);
 		    automapper.SetEndpoint(CFG.AUTOMAP_ENDPOINT.get());
-		    System.out.println(CFG.AUTOMAP_ENDPOINT.get());
 		    automapper.EnableGridUploads(CFG.AUTOMAP_UPLOAD.get());
 		    automapper.EnableTracking(CFG.AUTOMAP_TRACK.get());
 		    mappingLabel.settext("Mapping URL: " + (automapper.CheckEndpoint() ? "Valid" : "Invalid"));

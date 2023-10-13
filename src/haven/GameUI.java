@@ -1014,16 +1014,18 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
 		MapFile file;
 		try {
 		    file = MapFile.load(mapstore, mapfilename());
-		    if(CFG.AUTOMAP_UPLOAD.get()) {
-			MappingClient.getInstance().ProcessMap(file, (m) -> {
-			    if(m instanceof PMarker) {
-				return CFG.AUTOMAP_MARKERS.get().stream()
-				    .map(group -> group.col)
-				    .anyMatch(color -> color.equals(((PMarker)m).color));
-			    }
-			    return true;
-			});
-		    }
+		    try {
+			if(CFG.AUTOMAP_UPLOAD.get()) {
+			    MappingClient.getInstance().ProcessMap(file, (m) -> {
+				if(m instanceof PMarker) {
+				    return CFG.AUTOMAP_MARKERS.get().stream()
+					.map(group -> group.col)
+					.anyMatch(color -> color.equals(((PMarker) m).color));
+				}
+				return true;
+			    });
+			}
+		    } catch (Exception ex) {}
 		} catch(java.io.IOException e) {
 		    /* XXX: Not quite sure what to do here. It's
 		     * certainly not obvious that overwriting the
