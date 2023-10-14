@@ -48,7 +48,7 @@ public abstract class PView extends Widget {
     private final TickList ticklist = new TickList();
     private Sampler fragsamp;
     private PostProcessor tonemap = null;
-
+    
     public PView(Coord sz) {
 	super(sz);
 	tree = new RenderTree();
@@ -59,30 +59,30 @@ public abstract class PView extends Widget {
 	basic = conf.add((RenderTree.Node)null);
 	basic();
     }
-
+    
     public static class WidgetContext extends RenderContext {
 	private final PView wdg;
-
+	
 	public WidgetContext(PView wdg) {
 	    this.wdg = wdg;
 	}
-
+	
 	public PView widget() {
 	    return(wdg);
 	}
-
+	
 	private static final ClassResolver<PView> ctxr = new ClassResolver<PView>()
 	    .add(PView.class, wdg -> wdg)
 	    .add(Glob.class, wdg -> wdg.ui.sess.glob)
 	    .add(Session.class, wdg -> wdg.ui.sess);
 	public <T> T context(Class<T> cl) {return(ctxr.context(cl, wdg));}
-
+	
 	public Pipe.Op basic(Object id) {return(wdg.basic(id));}
 	public void basic(Object id, Pipe.Op state) {wdg.basic(id, state);}
-
+	
 	public String toString() {return(String.format("#<widgetctx %s>", wdg.getClass()));}
     }
-
+    
     protected Coord rendersz() {
 	GSettings prefs = curprefs;
 	if(prefs != null) {
@@ -91,49 +91,49 @@ public abstract class PView extends Widget {
 	}
 	return(this.sz);
     }
-
+    
     private final WidgetContext ctx = new WidgetContext(this);
     private Pipe.Op conf() {
 	rsz = rendersz();
 	return(Pipe.Op.compose(new FrameConfig(rsz), ctx, curprefs));
     }
-
+    
     private Pipe.Op curconf = null;
     private Pipe.Op curconf() {
 	if(curconf == null)
 	    curconf = conf();
 	return(curconf);
     }
-
+    
     private GSettings curprefs = null;
     protected GSettings gprefs() {
 	if(ui == null)
 	    return(null);
 	return(ui.gprefs);
     }
-
+    
     private Pipe.Op frame() {
 	return(Pipe.Op.compose(curconf(),
-			       new FrameInfo(),
-			       ((ui == null) || (ui.sess == null)) ? null : new Glob.FrameInfo(ui.sess.glob)));
+	    new FrameInfo(),
+	    ((ui == null) || (ui.sess == null)) ? null : new Glob.FrameInfo(ui.sess.glob)));
     }
-
+    
     protected void reconf() {
 	curconf = null;
 	conf.ostate(frame());
     }
-
+    
     public void resize(Coord sz) {
 	super.resize(sz);
 	reconf();
     }
-
+    
     public Pipe.Op basic(Object id) {
 	try(Locked lk = tree.lock()) {
 	    return(basicstates.get(id));
 	}
     }
-
+    
     public void basic(Object id, Pipe.Op state) {
 	try(Locked lk = tree.lock()) {
 	    Pipe.Op prev;
@@ -147,9 +147,9 @@ public abstract class PView extends Widget {
 		try {
 		    Collection<Pipe.Op> dcomb = comb;
 		    basic.ostate(p -> {
-			    for(Pipe.Op op : dcomb)
-				op.apply(p);
-			});
+			for(Pipe.Op op : dcomb)
+			    op.apply(p);
+		    });
 		} catch(RuntimeException e) {
 		    if(prev == null)
 			basicstates.remove(id);
@@ -160,19 +160,19 @@ public abstract class PView extends Widget {
 	    }
 	}
     }
-
+    
     /* XXX? Remove standard clearing and assume implementations to add
      * explicit clearing slot? */
     protected FColor clearcolor() {
 	return(FColor.BLACK);
     }
-
+    
     /* I've no idea why this function is necessary. */
     @SuppressWarnings("unchecked")
     private static RenderList.Slot<Rendered> uglyJavaCWorkAround(RenderList.Slot<?> slot) {
 	return((RenderList.Slot<Rendered>)slot);
     }
-
+    
     public void tick(double dt) {
 	super.tick(dt);
 	GSettings gprefs = gprefs();
@@ -185,13 +185,38 @@ public abstract class PView extends Widget {
 	if(audio != null)
 	    audio.cycle();
     }
-
-    private class Resampler extends PostProcessor {
+    
+    private abstract class Resampler extends PostProcessor {
+	final Coord isz, osz;
+	
+	Resampler(Coord isz, Coord osz) {
+	    this.isz = isz;
+	    this.osz = osz;
+	}
+    }
+    
+    private class LinResampler extends Resampler {
+	LinResampler(Coord isz, Coord osz) {super(isz, osz);}
+	
 	public void run(GOut g, Texture2D.Sampler2D in) {
 	    g.image(new TexRaw(in, true), Coord.z, g.sz());
 	}
     }
-
+    
+    private class IntResampler extends Resampler {
+	public final int scale;
+	
+	public IntResampler(Coord isz, Coord osz, int scale) {
+	    super(isz, osz);
+	    this.scale = scale;
+	}
+	
+	public void run(GOut g, Texture2D.Sampler2D in) {
+	    in.magfilter(Texture.Filter.NEAREST);
+	    g.image(new TexRaw(in, true), Coord.z, in.tex.sz().mul(scale));
+	}
+    }
+    
     private GOut resolveout(GOut def, FrameFormat fmt, PostProcessor next) {
 	if(next == null)
 	    return(def);
@@ -209,13 +234,24 @@ public abstract class PView extends Widget {
 	st.prep(new FragColor<>(Utils.el(next.buf.tex.images())));
 	return(new GOut(def.out, st, new Coord(area.sz())));
     }
-
-    private PostProcessor pp_resamp = null;
+    
+    private Resampler pp_resamp = null;
     protected void resolve(GOut g) {
 	List<PostProcessor> copy = new ArrayList<PostProcessor>(ctx.postproc());
 	if(!rsz.equals(this.sz)) {
-	    if(pp_resamp == null)
-		pp_resamp = new Resampler();
+	    if((pp_resamp == null) || !pp_resamp.isz.equals(rsz) || !pp_resamp.osz.equals(this.sz)) {
+		if(pp_resamp != null)
+		    pp_resamp.dispose();
+		if(this.sz.x > rsz.x) {
+		    int iscale = (this.sz.x + (rsz.x >> 1)) / rsz.x;
+		    if((Math.abs((rsz.x * iscale) - this.sz.x) < iscale))
+			pp_resamp = new IntResampler(rsz, this.sz, iscale);
+		    else
+			pp_resamp = new LinResampler(rsz, this.sz);
+		} else {
+		    pp_resamp = new LinResampler(rsz, this.sz);
+		}
+	    }
 	    copy.add(pp_resamp);
 	} else {
 	    if(pp_resamp != null) {
@@ -245,10 +281,10 @@ public abstract class PView extends Widget {
 	}
 	g.defstate();
     }
-
+    
     public void add(PostProcessor post) {ctx.add(post);}
     public void remove(PostProcessor post) {ctx.remove(post);}
-
+    
     public void tonemap(PostProcessor tonemap) {
 	if(this.tonemap != null) {
 	    remove(this.tonemap);
@@ -259,28 +295,28 @@ public abstract class PView extends Widget {
 	    this.tonemap = tonemap;
 	}
     }
-
+    
     protected void envsetup() {
 	back = env.drawlist().desc("pview: " + this);
 	instancer = new InstanceList(tree);
 	instancer.add(back, Rendered.class);
 	instancer.asyncadd(tree, Rendered.class);
     }
-
+    
     protected void envdispose() {
 	tree.remove(instancer);
 	back.dispose(); back = null;
 	instancer.dispose(); instancer = null;
     }
-
+    
     protected void maindraw(Render out) {
 	back.draw(out);
     }
-
+    
     public void gtick(Render out) {
 	ticklist.gtick(out);
     }
-
+    
     public void draw(GOut g) {
 	if((back == null) || !g.out.env().compatible(back)) {
 	    if(env != null) {
@@ -304,7 +340,7 @@ public abstract class PView extends Widget {
 	resolve(g);
 	list2d.draw(g);
     }
-
+    
     public void dispose() {
 	if(audio != null) {
 	    audio.clear();
@@ -316,60 +352,60 @@ public abstract class PView extends Widget {
 	tree.dispose();
 	super.dispose();
     }
-
+    
     private static final Object id_fb = new Object(), id_view = new Object(), id_misc = new Object();
     protected void basic() {
 	basic(id_fb, p -> {
-		FrameConfig fb = p.get(FrameConfig.slot);
-		FrameFormat fmt = new FrameFormat(new VectorFormat(4, NumberFormat.UNORM8), fb.samples, fb.sz);
-		if(tonemap != null)
-		    fmt.cfmt = new VectorFormat(4, NumberFormat.FLOAT16);
-		if(!fmt.matching(fragcol)) {
-		    if(fragcol != null)
-			fragcol.dispose();
-		    fragcol = fmt.maketex();
-		    fragsamp = fragcol.sampler();
-		    if(fragsamp instanceof Texture2D.Sampler2D) {
-			fragsamp.minfilter(Texture.Filter.LINEAR).magfilter(Texture.Filter.LINEAR);
-			fragsamp.swrap(Texture.Wrapping.CLAMP).twrap(Texture.Wrapping.CLAMP);
-		    }
+	    FrameConfig fb = p.get(FrameConfig.slot);
+	    FrameFormat fmt = new FrameFormat(new VectorFormat(4, NumberFormat.UNORM8), fb.samples, fb.sz);
+	    if(tonemap != null)
+		fmt.cfmt = new VectorFormat(4, NumberFormat.FLOAT16);
+	    if(!fmt.matching(fragcol)) {
+		if(fragcol != null)
+		    fragcol.dispose();
+		fragcol = fmt.maketex();
+		fragsamp = fragcol.sampler();
+		if(fragsamp instanceof Texture2D.Sampler2D) {
+		    fragsamp.minfilter(Texture.Filter.LINEAR).magfilter(Texture.Filter.LINEAR);
+		    fragsamp.swrap(Texture.Wrapping.CLAMP).twrap(Texture.Wrapping.CLAMP);
 		}
-		fmt.cfmt = Texture.DEPTH;
-		if(!fmt.matching(depth)) {
-		    if(depth != null)
-			depth.dispose();
-		    depth = fmt.maketex();
-		}
-		p.prep(new FragColor<>(Utils.el(fragcol.images()))).prep(new DepthBuffer<>(Utils.el(depth.images())));
-	    });
+	    }
+	    fmt.cfmt = Texture.DEPTH;
+	    if(!fmt.matching(depth)) {
+		if(depth != null)
+		    depth.dispose();
+		depth = fmt.maketex();
+	    }
+	    p.prep(new FragColor<>(Utils.el(fragcol.images()))).prep(new DepthBuffer<>(Utils.el(depth.images())));
+	});
 	basic(id_view, p -> {
-		FrameConfig fb = p.get(FrameConfig.slot);
-		Area area = Area.sized(Coord.z, fb.sz);
-		p.prep(new States.Viewport(area));
-		p.prep(Homo3D.state);
-	    });
+	    FrameConfig fb = p.get(FrameConfig.slot);
+	    Area area = Area.sized(Coord.z, fb.sz);
+	    p.prep(new States.Viewport(area));
+	    p.prep(Homo3D.state);
+	});
 	basic(id_misc, Pipe.Op.compose(FragColor.blend(new BlendMode(BlendMode.Function.ADD, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA,
-								     BlendMode.Function.MAX, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA)),
-				       new States.Depthtest(States.Depthtest.Test.LE),
-				       new States.Facecull()));
+		BlendMode.Function.MAX, BlendMode.Factor.SRC_ALPHA, BlendMode.Factor.INV_SRC_ALPHA)),
+	    new States.Depthtest(States.Depthtest.Test.LE),
+	    new States.Facecull()));
 	lights();
     }
-
+    
     protected void attached() {
 	basic(ActAudio.class, this.audio = new ActAudio(ui.audio));
     }
-
+    
     protected void lights() {
 	basic(Light.class, Pipe.Op.compose(lights, lights.compile()));
     }
-
+    
     public interface Render2D extends RenderTree.Node {
 	public void draw(GOut g, Pipe state);
     }
-
+    
     public static class ScreenList implements RenderList<Render2D> {
 	private final Set<Slot<? extends Render2D>> cur = new HashSet<>();
-
+	
 	public void draw(GOut g) {
 	    List<Slot<? extends Render2D>> copy;
 	    synchronized(cur) {
@@ -379,19 +415,19 @@ public abstract class PView extends Widget {
 		slot.obj().draw(g, slot.state());
 	    }
 	}
-
+	
 	public void add(Slot<? extends Render2D> slot) {
 	    synchronized(cur) {
 		cur.add(slot);
 	    }
 	}
-
+	
 	public void remove(Slot<? extends Render2D> slot) {
 	    synchronized(cur) {
 		cur.remove(slot);
 	    }
 	}
-
+	
 	public void update(Slot<? extends Render2D> slot) {}
 	public void update(Pipe group, int[] statemask) {}
     }

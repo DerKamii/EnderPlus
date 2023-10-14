@@ -29,9 +29,9 @@ package haven;
 import java.net.*;
 
 public class SessWidget extends AWidget {
-    private final Defer.Future<Connection> conn;
+    private final Defer.Future<Result> conn;
     private boolean rep = false;
-
+    
     @RName("sess")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -42,56 +42,44 @@ public class SessWidget extends AWidget {
 	    return(new SessWidget(host, port, cookie, sargs));
 	}
     }
-
-    static class Connection {
+    
+    static class Result {
 	final Session sess;
-	final int error;
-
-	Connection(Session sess, int error) {
+	final Connection.SessionError error;
+	
+	Result(Session sess, Connection.SessionError error) {
 	    this.sess = sess;
 	    this.error = error;
 	}
     }
-
+    
     public SessWidget(final String addr, final int port, final byte[] cookie, final Object... args) {
-	conn = Defer.later(new Defer.Callable<Connection>() {
-		public Connection call() throws InterruptedException {
-		    InetAddress host;
-		    try {
-			host = InetAddress.getByName(addr);
-		    } catch(UnknownHostException e) {
-			return(new Connection(null, Session.SESSERR_CONN));
-		    }
-		    Session sess = new Session(new InetSocketAddress(host, port), ui.sess.username, cookie, args);
-		    try {
-			synchronized(sess) {
-			    while(true) {
-				if(sess.state == "") {
-				    Connection ret = new Connection(sess, 0);
-				    sess = null;
-				    return(ret);
-				} else if(sess.connfailed != 0) {
-				    return(new Connection(null, sess.connfailed));
-				}
-				sess.wait();
-			    }
-			}
-		    } finally {
-			if(sess != null)
-			    sess.close();
-		    }
+	conn = Defer.later(new Defer.Callable<Result>() {
+	    public Result call() throws InterruptedException {
+		InetAddress host;
+		try {
+		    host = InetAddress.getByName(addr);
+		} catch(UnknownHostException e) {
+		    return(new Result(null, new Connection.SessionConnError()));
 		}
-	    });
+		try {
+		    return(new Result(new Session(new InetSocketAddress(host, port), ui.sess.username, cookie, args), null));
+		} catch(Connection.SessionError err) {
+		    return(new Result(null, err));
+		}
+	    }
+	});
     }
-
+    
     public void tick(double dt) {
 	super.tick(dt);
 	if(!rep && conn.done()) {
-	    wdgmsg("res", conn.get().error);
+	    Result r = conn.get();
+	    wdgmsg("res", (r.error == null) ? 0 : r.error.code);
 	    rep = true;
 	}
     }
-
+    
     public void uimsg(String name, Object... args) {
 	if(name == "exec") {
 	    ((RemoteUI)ui.rcvr).ret(conn.get().sess);
@@ -99,7 +87,7 @@ public class SessWidget extends AWidget {
 	    super.uimsg(name, args);
 	}
     }
-
+    
     public void destroy() {
 	super.destroy();
 	/* XXX: There's a race condition here, but I admit I'm not
