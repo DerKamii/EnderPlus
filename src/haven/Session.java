@@ -53,7 +53,15 @@ public class Session implements Resource.Resolver {
     public static final int SESSERR_MESG = 6;
 
     static final int ackthresh = 30;
-
+    
+    private static final String[] LOCAL_CACHED = new String[]{
+	"gfx/hud/chr/custom/mine",
+	"gfx/hud/chr/custom/detect",
+	"gfx/hud/chr/custom/sneak",
+	"gfx/hud/chr/custom/ahard",
+	"gfx/hud/chr/custom/asoft"
+    };
+    
     public final Connection conn;
     public int connfailed = 0;
     public String connerror = null;
@@ -306,6 +314,7 @@ public class Session implements Resource.Resolver {
 	this.username = username;
 	this.cookie = cookie;
 	this.args = args;
+	Arrays.stream(LOCAL_CACHED).forEach(this::cacheres);
 	glob = new Glob(this);
 	character = new CharacterInfo();
 	conn.add(conncb);
