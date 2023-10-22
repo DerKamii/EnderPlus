@@ -92,6 +92,8 @@ public class Polity extends Widget {
 	}
 
 	protected void drawslot(GOut g, Member m, int idx, Area area) {
+	    if (m == null || mw == null || g == null || area == null)
+		return;
 	    if((mw instanceof MemberWidget) && Utils.eq(((MemberWidget)mw).id, m.id))
 		drawsel(g, m, idx, area);
 	}
