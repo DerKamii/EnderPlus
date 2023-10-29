@@ -27,6 +27,9 @@
   {"match": "gfx/terobjs/vehicle/wreckingball", "icon": "paginae/bld/wball", "visible": true},
   {"match": "gfx/terobjs/road/milestone-stone-e", "icon": "radar/milestone-stone-e", "visible": true},
   {"match": "gfx/terobjs/road/milestone-stone-m", "icon": "radar/milestone-stone-m", "visible": true},
+  {"match": "gfx/terobjs/items/truffle-black2", "icon": "gfx/invobjs/herbs/truffle-black", "visible": true},
+  {"match": "gfx/terobjs/items/truffle-white2", "icon": "gfx/invobjs/herbs/truffle-white", "visible": true},
   {"match": "gfx/terobjs/items/arrow", "icon": "gfx/invobjs/arrow", "visible": true},
-  {"match": "gfx/kritter/midgeswarm/midgeswarm", "icon": "radar/midgeswarm", "visible": true}
+  {"match": "gfx/kritter/midgeswarm/midgeswarm", "icon": "radar/midgeswarm", "visible": true},
+  {"match": "gfx/terobjs/trees/oldtrunk", "icon":  "gfx/invobjs/wblock-mirkwood", "visible":  true}
 ]

@@ -361,6 +361,7 @@ public class ExtInventory extends Widget {
 	public ItemType(WItem w, Double quality) {
 	    this.name = name(w);
 	    this.resname = resname(w);
+	    //System.out.println(resname);
 	    this.quality = quality;
 	    this.matches = w.item.matches;
 	    this.color = w.olcol.get();

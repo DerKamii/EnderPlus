@@ -734,6 +734,8 @@ public class MapFile {
 	    for(int i = 0; i < tmap.length; i++)
 		tmap[i] = -1;
 	    for(int i = 0; i < this.tiles.length; i++) {
+		if (this.tiles[i] < 0)
+		    return(this);
 		if(norepl[this.tiles[i]]) {
 		    used[prev.tiles[i]] = true;
 		    any = true;

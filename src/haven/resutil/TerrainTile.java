@@ -41,25 +41,25 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
     public final Var[] var;
     public final Tileset transset;
     public final Pipe.Op draw;
-
+    
     public static class Var {
 	public NodeWrap mat;
 	public double thrl, thrh;
 	public double nz;
 	public Pipe.Op draw;
-
+	
 	public Var(NodeWrap mat, double thrl, double thrh, double nz) {
 	    this.mat = mat; this.thrl = thrl; this.thrh = thrh; this.nz = nz;
 	}
     }
-
+    
     private static final int sr = 12;
     public class Blend {
 	final MapMesh m;
 	final Scan vs, es;
 	final float[][] bv;
 	final boolean[][] en;
-
+	
 	private Blend(MapMesh m) {
 	    this.m = m;
 	    vs = new Scan(Coord.z.sub(sr, sr), m.sz.add(sr * 2 + 1, sr * 2 + 1));
@@ -132,12 +132,12 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 			if(fall) {
 			    en[i][es.o(x, y)] = false;
 			} else if((bv[i][vs.o(x    , y    )] < 0.001f) && (bv[i][vs.o(x + 1, y    )] < 0.001f) &&
-				  (bv[i][vs.o(x    , y + 1)] < 0.001f) && (bv[i][vs.o(x + 1, y + 1)] < 0.001f)) {
+			    (bv[i][vs.o(x    , y + 1)] < 0.001f) && (bv[i][vs.o(x + 1, y + 1)] < 0.001f)) {
 			    en[i][es.o(x, y)] = false;
 			} else {
 			    en[i][es.o(x, y)] = true;
 			    if((bv[i][vs.o(x    , y    )] > 0.99f) && (bv[i][vs.o(x + 1, y    )] > 0.99f) &&
-			       (bv[i][vs.o(x    , y + 1)] > 0.99f) && (bv[i][vs.o(x + 1, y + 1)] > 0.99f)) {
+				(bv[i][vs.o(x    , y + 1)] > 0.99f) && (bv[i][vs.o(x + 1, y + 1)] > 0.99f)) {
 				fall = true;
 			    }
 			}
@@ -145,7 +145,7 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 		}
 	    }
 	}
-
+	
 	private void setbase(float[][] bv) {
 	    for(int y = vs.ul.y; y < vs.br.y - 1; y++) {
 		for(int x = vs.ul.x; x < vs.br.x - 1; x++) {
@@ -171,32 +171,32 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 		}
 	    }
 	}
-
+	
 	final VertFactory[] lvfac = new VertFactory[var.length + 1]; {
 	    for(int i = 0; i < var.length + 1; i++) {
 		final int l = i;
 		lvfac[i] = new VertFactory() {
-			final float fac = 25f / 4f;
-
-			float bv(Coord lc, float tcx, float tcy) {
-			    float icx = 1 - tcx, icy = 1 - tcy;
-			    return((((bv[l][vs.o(lc.x + 0, lc.y + 0)] * icx) + (bv[l][vs.o(lc.x + 1, lc.y + 0)] * tcx)) * icy) +
-				   (((bv[l][vs.o(lc.x + 0, lc.y + 1)] * icx) + (bv[l][vs.o(lc.x + 1, lc.y + 1)] * tcx)) * tcy));
-			}
-
-			public Surface.MeshVertex make(MeshBuf buf, MPart d, int i) {
-			    Surface.MeshVertex ret = new Surface.MeshVertex(buf, d.v[i]);
-			    Coord3f tan = Coord3f.yu.cmul(ret.nrm).norm();
-			    Coord3f bit = ret.nrm.cmul(Coord3f.xu).norm();
-			    Coord3f tc = new Coord3f((d.lc.x + d.tcx[i]) / fac, (d.lc.y + d.tcy[i]) / fac, 0);
-			    int alpha = (int)(bv(d.lc, d.tcx[i], d.tcy[i]) * 255);
-			    buf.layer(BumpMap.ltan).set(ret, tan);
-			    buf.layer(BumpMap.lbit).set(ret, bit);
-			    buf.layer(MeshBuf.tex).set(ret, tc);
-			    buf.layer(MeshBuf.col).set(ret, new Color(255, 255, 255, alpha));
-			    return(ret);
-			}
-		    };
+		    final float fac = 25f / 4f;
+		    
+		    float bv(Coord lc, float tcx, float tcy) {
+			float icx = 1 - tcx, icy = 1 - tcy;
+			return((((bv[l][vs.o(lc.x + 0, lc.y + 0)] * icx) + (bv[l][vs.o(lc.x + 1, lc.y + 0)] * tcx)) * icy) +
+			    (((bv[l][vs.o(lc.x + 0, lc.y + 1)] * icx) + (bv[l][vs.o(lc.x + 1, lc.y + 1)] * tcx)) * tcy));
+		    }
+		    
+		    public Surface.MeshVertex make(MeshBuf buf, MPart d, int i) {
+			Surface.MeshVertex ret = new Surface.MeshVertex(buf, d.v[i]);
+			Coord3f tan = Coord3f.yu.cmul(ret.nrm).norm();
+			Coord3f bit = ret.nrm.cmul(Coord3f.xu).norm();
+			Coord3f tc = new Coord3f((d.lc.x + d.tcx[i]) / fac, (d.lc.y + d.tcy[i]) / fac, 0);
+			int alpha = (int)(bv(d.lc, d.tcx[i], d.tcy[i]) * 255);
+			buf.layer(BumpMap.ltan).set(ret, tan);
+			buf.layer(BumpMap.lbit).set(ret, bit);
+			buf.layer(MeshBuf.tex).set(ret, tc);
+			buf.layer(MeshBuf.col).set(ret, new Color(255, 255, 255, alpha));
+			return(ret);
+		    }
+		};
 	    }
 	}
     }
@@ -205,7 +205,7 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    return(new Blend(m));
 	}
     };
-
+    
     @ResName("trn")
     public static class Factory implements Tiler.Factory {
 	public TerrainTile create(int id, Tileset set) {
@@ -242,10 +242,10 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 		    int mid = (Integer)desc[1];
 		    double thrl, thrh;
 		    if(desc[2] instanceof Object[]) {
-			thrl = (Float)((Object[])desc[2])[0];
-			thrh = (Float)((Object[])desc[2])[1];
+			thrl = Utils.fv(((Object[])desc[2])[0]);
+			thrh = Utils.fv(((Object[])desc[2])[1]);
 		    } else {
-			thrl = (Float)desc[2];
+			thrl = Utils.fv(desc[2]);
 			thrh = Double.MAX_VALUE;
 		    }
 		    double nz = (res.name.hashCode() * mid * 8129) % 10000;
@@ -263,7 +263,7 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    return(new TerrainTile(id, new SNoise3(res.name.hashCode()), base, var.toArray(new Var[0]), trans));
 	}
     }
-
+    
     public TerrainTile(int id, SNoise3 noise, NodeWrap base, Var[] var, Tileset transset) {
 	super(id);
 	this.noise = noise;
@@ -274,11 +274,11 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    v.draw = Pipe.Op.compose(new MapMesh.MLOrder(0, z++), VertexColor.instance);
 	this.transset = transset;
     }
-
+    
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
 	lay(m, lc, gc, this, false);
     }
-
+    
     public void faces(MapMesh m, MPart d) {
 	Blend b = m.data(blend);
 	Surface.MeshVertex[] mv = new Surface.MeshVertex[d.v.length];
@@ -294,9 +294,9 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    }
 	}
     }
-
+    
     private final static Map<TexRender, AlphaTex> transtex = new WeakHashMap<TexRender, AlphaTex>();
-
+    
     /* XXX: Some strange javac bug seems to make it resolve the
      * trans() references to the wrong signature, thus the name
      * distinction. */
@@ -333,29 +333,29 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    }
 	}
     }
-
+    
     private MCons tcons(final int z, final Tile t) {
 	return(new MCons() {
-		public void faces(MapMesh m, MPart d) {
-		    _faces(m, z, t, d);
-		}
-	    });
+	    public void faces(MapMesh m, MPart d) {
+		_faces(m, z, t, d);
+	    }
+	});
     }
-
+    
     public MCons tcons(final int z, final int bmask, final int cmask) {
 	if((transset == null) || ((bmask == 0) && (cmask == 0)))
 	    return(MCons.nil);
 	return(new MCons() {
-		public void faces(MapMesh m, MPart d) {
-		    Random rnd = m.rnd(d.lc);
-		    if((transset.btrans != null) && (bmask != 0))
-			tcons(z, transset.btrans[bmask - 1].pick(rnd)).faces(m, d);
-		    if((transset.ctrans != null) && (cmask != 0))
-			tcons(z, transset.ctrans[cmask - 1].pick(rnd)).faces(m, d);
-		}
-	    });
+	    public void faces(MapMesh m, MPart d) {
+		Random rnd = m.rnd(d.lc);
+		if((transset.btrans != null) && (bmask != 0))
+		    tcons(z, transset.btrans[bmask - 1].pick(rnd)).faces(m, d);
+		if((transset.ctrans != null) && (cmask != 0))
+		    tcons(z, transset.ctrans[cmask - 1].pick(rnd)).faces(m, d);
+	    }
+	});
     }
-
+    
     public void trans(MapMesh m, Random rnd, Tiler gt, Coord lc, Coord gc, int z, int bmask, int cmask) {
 	if(transset == null)
 	    return;
@@ -366,11 +366,11 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	if((transset.ctrans != null) && (cmask > 0))
 	    gt.lay(m, lc, gc, tcons(z, transset.ctrans[cmask - 1].pick(rnd)), false);
     }
-
+    
     public static class RidgeTile extends TerrainTile implements Ridges.RidgeTile {
 	public final Tiler.MCons rcons;
 	public final int rth;
-
+	
 	@ResName("trn-r")
 	public static class RFactory implements Tiler.Factory {
 	    public Tiler create(int id, Tileset set) {
@@ -385,7 +385,7 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 			Resource mres = set.getres().pool.load((String)desc[1], (Integer)desc[2]).get();
 			mat = mres.flayer(Material.Res.class).get();
 			if(desc.length > 3)
-			    texh = (Float)desc[3];
+			    texh = Utils.fv(desc[3]);
 		    } else if(p.equals("rthres")) {
 			rth = ((Number)desc[1]).doubleValue();
 		    }
@@ -395,20 +395,20 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 		return(new RidgeTile(base.id, base.noise, base.base, base.var, base.transset, (int)rth, mat, texh));
 	    }
 	}
-
+	
 	public RidgeTile(int id, SNoise3 noise, NodeWrap base, Var[] var, Tileset transset, int rth, Pipe.Op rmat, float texh) {
 	    super(id, noise, base, var, transset);
 	    this.rth = rth;
 	    this.rcons = new Ridges.TexCons(rmat, texh);
 	}
-
+	
 	public double breakz() {return(rth);}
-
+	
 	public void model(MapMesh m, Random rnd, Coord lc, Coord gc) {
 	    if(!m.data(Ridges.id).model(lc))
 		super.model(m, rnd, lc, gc);
 	}
-
+	
 	public void lay(MapMesh m, Coord lc, Coord gc, MCons cons, boolean cover) {
 	    Ridges r = m.data(Ridges.id);
 	    if(!r.laygnd(lc, cons))
@@ -416,7 +416,7 @@ public class TerrainTile extends Tiler implements Tiler.MCons, Tiler.CTrans {
 	    else if(cover)
 		r.layridge(lc, cons);
 	}
-
+	
 	public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
 	    super.lay(m, rnd, lc, gc);
 	    m.data(Ridges.id).layridge(lc, rcons);

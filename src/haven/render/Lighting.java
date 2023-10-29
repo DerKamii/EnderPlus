@@ -508,7 +508,7 @@ public interface Lighting {
 			return(null);
 		    FillBuffer ret = env.fillbuf(img);
 		    ShortBuffer buf = ret.push().asShortBuffer();
-		    ((Buffer)buf).position(0);
+		    buf.position(0);
 		    buf.put(grid);
 		    buf.put(lists, 0, listlen);
 		    return(ret);

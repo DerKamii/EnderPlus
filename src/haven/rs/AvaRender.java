@@ -42,13 +42,13 @@ public class AvaRender {
 	comp.chequ(equ);
 	return(comp);
     }
-
+    
     private static class IntException extends RuntimeException {
 	private IntException(InterruptedException cause) {
 	    super(cause);
 	}
     }
-
+    
     public static BufferedImage render(Coord sz, Indir<Resource> base, String camnm, List<MD> mod, List<ED> equ) throws InterruptedException {
 	Composited tcomp;
 	Camera tcam;
@@ -67,65 +67,65 @@ public class AvaRender {
 	final Composited comp = tcomp; /* ¦] */
 	final Camera cam = tcam;
 	final DrawBuffer buf = new DrawBuffer(Context.getdefault().env(), sz);
-
+	
 	float field = 0.5f;
 	float aspect = ((float)buf.sz.y) / ((float)buf.sz.x);
 	Projection proj = Projection.frustum(-field, field, -aspect * field, aspect * field, 1, 5000);
 	BufferedImage ret = buf.draw(Pipe.Op.compose(proj, cam), new RenderTree.Node() {
-		@Override public void added(RenderTree.Slot slot) {
-		    slot.add(comp);
-		    slot.add(new DirLight(Color.WHITE, Color.WHITE, Color.WHITE, new Coord3f(1, 1, 1).norm()));
-		}
-	    });
+	    @Override public void added(RenderTree.Slot slot) {
+		slot.add(comp);
+		slot.add(new DirLight(Color.WHITE, Color.WHITE, Color.WHITE, new Coord3f(1, 1, 1).norm()));
+	    }
+	});
 	return(ret);
     }
-
+    
     public static final Server.Command call = new Server.Command() {
-	    public Object[] run(Server.Client cl, Object... args) throws InterruptedException {
-		Coord sz = UI.scale((Coord)args[0]);
-		Indir<Resource> base = Resource.local().load((String)args[1]);
-		String camnm = (String)args[2];
-		Object[] amod = (Object[])args[3];
-		Object[] aequ = (Object[])args[4];
-		List<MD> mod = new LinkedList<MD>();
-		for(int i = 0; i < amod.length; i += 2) {
-		    Indir<Resource> mr = Resource.local().load((String)amod[i]);
-		    Object[] atex = (Object[])amod[i + 1];
-		    List<ResData> tex = new LinkedList<ResData>();
-		    for(int o = 0; o < atex.length; o++)
-			tex.add(new ResData(Resource.local().load((String)atex[o]), Message.nil));
-		    mod.add(new MD(mr, tex));
-		}
-		List<ED> equ = new LinkedList<ED>();
-		for(int i = 0; i < aequ.length;) {
-		    if(aequ[i] instanceof Object[]) {
-			Object[] cequ = (Object[])aequ[i];
-			int t = (Integer)cequ[0];
-			String at = (String)cequ[1];
-			Indir<Resource> er = Resource.local().load((String)cequ[2]);
-			byte[] sdt = (byte[])cequ[3];
-			Coord3f off = new Coord3f((Float)cequ[4], (Float)cequ[5], (Float)cequ[6]);
-			equ.add(new ED(t, at, new ResData(er, new MessageBuf(sdt)), off));
-		    } else {
-			int t = (Integer)aequ[i++];
-			String at = (String)aequ[i++];
-			Indir<Resource> er = Resource.local().load((String)aequ[i++]);
-			Coord3f off = new Coord3f((Float)aequ[i++], (Float)aequ[i++], (Float)aequ[i++]);
-			equ.add(new ED(t, at, new ResData(er, Message.nil), off));
-		    }
-		}
-		BufferedImage ava = render(sz.mul(4), base, camnm, mod, equ);
-		ava = PUtils.convolvedown(ava, sz, new PUtils.Lanczos(2));
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		try {
-		    javax.imageio.ImageIO.write(ava, "PNG", buf);
-		} catch(IOException e) {
-		    throw(new Error(e));
-		}
-		return(new Object[] {"ok", buf.toByteArray()});
+	public Object[] run(Server.Client cl, Object... args) throws InterruptedException {
+	    Coord sz = UI.scale((Coord)args[0]);
+	    Indir<Resource> base = Resource.local().load((String)args[1]);
+	    String camnm = (String)args[2];
+	    Object[] amod = (Object[])args[3];
+	    Object[] aequ = (Object[])args[4];
+	    List<MD> mod = new LinkedList<MD>();
+	    for(int i = 0; i < amod.length; i += 2) {
+		Indir<Resource> mr = Resource.local().load((String)amod[i]);
+		Object[] atex = (Object[])amod[i + 1];
+		List<ResData> tex = new LinkedList<ResData>();
+		for(int o = 0; o < atex.length; o++)
+		    tex.add(new ResData(Resource.local().load((String)atex[o]), Message.nil));
+		mod.add(new MD(mr, tex));
 	    }
-	};
-
+	    List<ED> equ = new LinkedList<ED>();
+	    for(int i = 0; i < aequ.length;) {
+		if(aequ[i] instanceof Object[]) {
+		    Object[] cequ = (Object[])aequ[i];
+		    int t = (Integer)cequ[0];
+		    String at = (String)cequ[1];
+		    Indir<Resource> er = Resource.local().load((String)cequ[2]);
+		    byte[] sdt = (byte[])cequ[3];
+		    Coord3f off = new Coord3f(Utils.fv(cequ[4]), Utils.fv(cequ[5]), Utils.fv(cequ[6]));
+		    equ.add(new ED(t, at, new ResData(er, new MessageBuf(sdt)), off));
+		} else {
+		    int t = (Integer)aequ[i++];
+		    String at = (String)aequ[i++];
+		    Indir<Resource> er = Resource.local().load((String)aequ[i++]);
+		    Coord3f off = new Coord3f(Utils.fv(aequ[i++]), Utils.fv(aequ[i++]), Utils.fv(aequ[i++]));
+		    equ.add(new ED(t, at, new ResData(er, Message.nil), off));
+		}
+	    }
+	    BufferedImage ava = render(sz.mul(4), base, camnm, mod, equ);
+	    ava = PUtils.convolvedown(ava, sz, new PUtils.Lanczos(2));
+	    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+	    try {
+		javax.imageio.ImageIO.write(ava, "PNG", buf);
+	    } catch(IOException e) {
+		throw(new Error(e));
+	    }
+	    return(new Object[] {"ok", buf.toByteArray()});
+	}
+    };
+    
     @SuppressWarnings("unchecked")
     public static void main(String[] args) throws Exception {
 	Indir<Resource> base = Resource.local().load("gfx/borka/body");

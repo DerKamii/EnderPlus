@@ -876,6 +876,8 @@ public class Skeleton {
 		l.defer(() -> {
 			Pipe.Op ploc = (this.loc != null) ? this.loc.apply(owner) : null;
 			for(Location.Chain loc : locs) {
+			    if (loc == null)
+				continue;
 			    Coord3f o = loc.fin(Matrix4f.id).mul4(Coord3f.o);
 			    Location lxf = new Location(loc.fin(Location.makexlate(new Matrix4f(), o.inv())));
 			    l.defer(() -> {

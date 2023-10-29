@@ -29,42 +29,44 @@ package haven.rs;
 import haven.*;
 import haven.render.*;
 import haven.render.gl.*;
+import haven.render.jogl.*;
 import com.jogamp.opengl.*;
+import haven.render.gl.GL;
 
 public class GLOffscreen implements Context {
     public final GLProfile prof;
     public final GLAutoDrawable buf;
     private final Object dmon = new Object();
-    private GLEnvironment benv = null;
+    private JOGLEnvironment benv = null;
     private final Environment penv;
-
+    
     public GLOffscreen() {
 	prof = GLProfile.getMaxProgrammableCore(true);
 	GLDrawableFactory df = GLDrawableFactory.getFactory(prof);
 	this.buf = df.createOffscreenAutoDrawable(null, caps(prof), null, 1, 1);
 	buf.addGLEventListener(new GLEventListener() {
-		public void display(GLAutoDrawable d) {
-		    redraw(d.getGL().getGL3());
-		}
-
-		public void init(GLAutoDrawable d) {
-		}
-
-		public void reshape(GLAutoDrawable d, int x, int y, int w, int h) {
-		}
-
-		public void dispose(GLAutoDrawable d) {
-		}
-	    });
+	    public void display(GLAutoDrawable d) {
+		redraw(d.getGL().getGL3());
+	    }
+	    
+	    public void init(GLAutoDrawable d) {
+	    }
+	    
+	    public void reshape(GLAutoDrawable d, int x, int y, int w, int h) {
+	    }
+	    
+	    public void dispose(GLAutoDrawable d) {
+	    }
+	});
 	buf.display();
 	if(benv == null)
 	    throw(new AssertionError("offscreen display call was not honored"));
 	penv = new ProxyEnv();
     }
-
+    
     private class ProxyEnv extends Environment.Proxy {
 	public Environment back() {return(benv);}
-
+	
 	public void submit(Render r) {
 	    super.submit(r);
 	    synchronized(dmon) {
@@ -72,7 +74,7 @@ public class GLOffscreen implements Context {
 	    }
 	}
     }
-
+    
     protected GLCapabilities caps(GLProfile prof) {
 	GLCapabilities ret = new GLCapabilities(prof);
 	ret.setDoubleBuffered(true);
@@ -82,25 +84,30 @@ public class GLOffscreen implements Context {
 	ret.setBlueBits(8);
 	return(ret);
     }
-
+    
     private void redraw(GL3 gl) {
 	// gl = new TraceGL3(gl, System.err);
 	GLContext ctx = gl.getContext();
 	if(benv == null)
-	    benv = new GLEnvironment(gl, ctx, Area.sized(Coord.z, new Coord(1, 1)));
+	    benv = new JOGLEnvironment(gl, ctx, Area.sized(Coord.z, new Coord(1, 1)));
 	if(benv.ctx != ctx)
 	    throw(new AssertionError());
-	benv.process(gl);
-	benv.finish(gl);
+	benv.process(new JOGLWrap(gl));
+	try {
+	    benv.finish(new JOGLWrap(gl));
+	} catch(InterruptedException e) {
+	    Thread.currentThread().interrupt();
+	    throw(new RuntimeException(e));
+	}
     }
-
+    
     public Environment env() {
 	return(penv);
     }
-
+    
     public void dispose() {
     }
-
+    
     private static GLOffscreen defctx = null;
     public static GLOffscreen get() {
 	if(defctx == null) {
