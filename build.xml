@@ -197,6 +197,7 @@
     <copy todir="bin">
       <fileset dir="build">
 	<include name="hafen.jar" />
+        <include name="client-res.jar" />
       </fileset>
       <fileset dir="lib/ext">
 	<include name="hafen-res.jar" />
