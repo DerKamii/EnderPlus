@@ -37,7 +37,7 @@ import java.lang.reflect.*;
 public class MainFrame extends java.awt.Frame implements Console.Directory {
     private static final String TITLE = String.format("Haven & Hearth modified by Kami (v%s)", Config.version);
     public static final Config.Variable<Boolean> initfullscreen = Config.Variable.propb("haven.fullscreen", false);
-    public static final Config.Variable<String> renderer = Config.Variable.prop("haven.renderer", "lwjgl");
+    public static final Config.Variable<String> renderer = Config.Variable.prop("haven.renderer", "jogl");
     public static final Config.Variable<Boolean> status = Config.Variable.propb("haven.status", false);
     final UIPanel p;
     private final ThreadGroup g;
