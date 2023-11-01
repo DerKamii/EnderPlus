@@ -288,14 +288,19 @@ public class MappingClient {
 	
 	@Override
 	public void run() {
-	    ArrayList<JSONObject> loadedMarkers = new ArrayList<>();
-	    while (!markers.isEmpty()) {
+	    try
+	    {
+		ArrayList<JSONObject> loadedMarkers = new ArrayList<>();
+		if (markers.isEmpty())
+		    return;
+	    
 		System.out.println("processing " + markers.size() + " markers");
-		Iterator<MarkerData> iterator = markers.iterator();
-		while (iterator.hasNext()) {
-		    MarkerData md = iterator.next();
+		for (int i = 0; i < markers.size(); i++) {
 		    try {
+			MarkerData md = markers.get(i);
 			Coord mgc = new Coord(Math.floorDiv(md.m.tc.x, 100), Math.floorDiv(md.m.tc.y, 100));
+			if (md.indirGrid.get() == null)
+			    continue;
 			long gridId = md.indirGrid.get().id;
 			JSONObject o = new JSONObject();
 			o.put("name", md.m.nm);
@@ -303,28 +308,34 @@ public class MappingClient {
 			Coord gridOffset = md.m.tc.sub(mgc.mul(100));
 			o.put("x", gridOffset.x);
 			o.put("y", gridOffset.y);
-			
 			if(md.m instanceof SMarker) {
 			    o.put("type", "shared");
-			    o.put("id", ((SMarker) md.m).oid);
+			    try {
+				o.put("id", ((SMarker) md.m).oid);
+			    } catch (Exception ex)
+			    {
+				o.put("id", 0);
+			    }
 			    o.put("image", ((SMarker) md.m).res.name);
 			} else if(md.m instanceof PMarker) {
 			    o.put("type", "player");
 			    o.put("color", ((PMarker) md.m).color);
 			}
 			loadedMarkers.add(o);
-			iterator.remove();
 		    } catch (Loading ex) {
 		    }
 		}
+	 
+		System.out.println("scheduling marker upload");
 		try {
-		    Thread.sleep(50);
-		} catch (InterruptedException ex) { }
+		    scheduler.execute(new MarkerUpdate(new JSONArray(loadedMarkers.toArray())));
+		} catch (Exception ex) {
+		    System.out.println(ex);
+		}
 	    }
-	    System.out.println("scheduling marker upload");
-	    try {
-		scheduler.execute(new MarkerUpdate(new JSONArray(loadedMarkers.toArray())));
-	    } catch (Exception ex) {
+	    catch (Exception ex)
+	    {
+		System.out.println("Error while processing markers");
 		System.out.println(ex);
 	    }
 	}
