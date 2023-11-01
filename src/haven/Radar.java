@@ -43,7 +43,27 @@ public class Radar {
 	    gob2icon.put(item.match, item.icon);
 	    addSetting(settings, item.icon, item.visible);
 	}
+	addMissingStones(settings);
 	ui.sess.glob.oc.gobAction(Gob::iconUpdated);
+    }
+    
+    private static void addMissingStones(Map<String, GobIcon.Setting> settings)
+    {
+	putStone("cinnabar");
+	addSetting(settings, "gfx/invobjs/cinnabar", false);
+	putStone("chert");
+	addSetting(settings, "gfx/invobjs/chert", false);
+	putStone("graywacke");
+	addSetting(settings, "gfx/invobjs/graywacke", false);
+	putStone("serpentine");
+	addSetting(settings, "gfx/invobjs/serpentine", false);
+    }
+    
+    private static void putStone(String name)
+    {
+	gob2icon.put("gfx/terobjs/bummlings/" + name + "1", "gfx/invobjs/" + name);
+	gob2icon.put("gfx/terobjs/bummlings/" + name + "2", "gfx/invobjs/" + name);
+	gob2icon.put("gfx/terobjs/bummlings/" + name + "3", "gfx/invobjs/" + name);
     }
     
     private static void addSetting(Map<String, GobIcon.Setting> settings, String res, boolean def) {
