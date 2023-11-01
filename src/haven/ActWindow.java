@@ -25,6 +25,8 @@ public class ActWindow extends GameUI.Hidewnd {
 	filter = add(new TextEntry(WIDTH, "") {
 	    @Override
 	    public void activate(String text) {
+		if (filtered == null || filtered.sel == null || filtered.sel.pagina == null)
+		    return;
 		act(filtered.sel.pagina);
 	    }
 
