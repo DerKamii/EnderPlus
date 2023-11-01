@@ -263,6 +263,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 
 	private float getz(Coord2d rc, double ra) {
+	    if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+		return 0.0F;
 	    Coord2d[][] no = this.obst, ro = new Coord2d[no.length][];
 	    {
 		double s = Math.sin(ra), c = Math.cos(ra);

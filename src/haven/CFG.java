@@ -36,6 +36,7 @@ public class CFG<T> {
     public static final CFG<Integer> AUTO_PICK_RADIUS = new CFG<>("general.auto_pick_radius", 55);
     public static final CFG<Boolean> AUTO_DROP_RESPECT_FILTER = new CFG<>("general.auto_drop.filter", true);
     public static final CFG<Integer> CUPBOARD_HEIGHT = new CFG<>("display.cupboard_height", 100);
+    public static final CFG<Integer> PALISADE_HEIGHT = new CFG<>("display.palisade_height", 100);
 
     public static final CFG<Theme> THEME = new CFG<>("ui.theme", Theme.Pretty);
     public static final CFG<Boolean> FORCE_HW_CURSOR = new CFG<>("ui.force_hw_cursor", false);
@@ -93,6 +94,9 @@ public class CFG<T> {
     public static final CFG<Boolean> AUTOFOOD_TRACK = new CFG<>("autofood.track", false);
     public static final CFG<Set<BuddyWnd.Group>> AUTOMAP_MARKERS = new CFG<>("automap.markers", new HashSet<>(), new TypeToken<Set<BuddyWnd.Group>>(){});
     public static final CFG<String> AUTOMAP_ENDPOINT = new CFG<>("automap.andpoint", "");
+    
+    // some new additions
+    public static final CFG<Boolean> FLATTEN_TERRAIN = new CFG("display.flatten_terrain", false);
 
     private static final String CONFIG_JSON = "config.json";
     private static final Map<Object, Object> cfg;

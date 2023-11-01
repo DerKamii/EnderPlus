@@ -322,18 +322,26 @@ public class WaterTile extends Tiler {
 	    }
 	};
 	
-	private final ShaderMacro shader = prog -> {
-	    FragColor.fragcol(prog.fctx).mod(in -> rgbmix.call(in, mfogcolor, min(div(fragd.ref(), l(maxdepth)), l(1.0))), 1000);
-	};
+	private final ShaderMacro shader;
 	
 	private BottomFog() {
 	    super(Slot.Type.DRAW);
+	    shader = prog -> {
+		FragColor.fragcol(prog.fctx).mod(in -> rgbmix.call(in, mfogcolor, min(div(fragd.ref(), l(maxdepth)), l(1.0))), 1000);
+	    };
+	}
+	private BottomFog(final Color newfogcolor) {
+	    super(Slot.Type.DRAW);
+	    Expression nfogcolor = col3(newfogcolor);
+	    shader = prog -> FragColor.fragcol(prog.fctx).mod(in -> rgbmix.call(in, nfogcolor, min(div(fragd.ref(), l(maxdepth)), l(1.0))), 1000);
 	}
 	
 	public ShaderMacro shader() {return(shader);}
     }
     public static final BottomFog waterfog = new BottomFog();
+    public static final BottomFog deepwaterfog = new BottomFog(new Color(0,0,0));
     private static final Pipe.Op botmat = Pipe.Op.compose(waterfog, new States.DepthBias(4, 4));
+    private static final Pipe.Op botmatDeep = Pipe.Op.compose(deepwaterfog, new States.DepthBias(4, 4));
     
     public static class ObFog extends State implements InstanceBatch.AttribState {
 	public static final Slot<ObFog> slot = new Slot<>(State.Slot.Type.DRAW, ObFog.class)
@@ -397,14 +405,20 @@ public class WaterTile extends Tiler {
 		    bottom = (Tiler.MCons)b;
 		}
 	    }
-	    return(new WaterTile(id, bottom, depth));
+	    boolean useDeepFog = false;
+	    //System.out.println(set.getres().name);
+	    if (set.getres().name.equals("gfx/tiles/odeeper")) {
+		useDeepFog = true;
+	    }
+	    return(new WaterTile(id, bottom, depth, useDeepFog));
 	}
     }
-    
-    public WaterTile(int id, Tiler.MCons bottom, int depth) {
+    private boolean UseDeepFog = false;
+    public WaterTile(int id, Tiler.MCons bottom, int depth, boolean useDeepFog) {
 	super(id);
 	this.bottom = bottom;
 	this.depth = depth;
+	UseDeepFog = useDeepFog;
     }
     
     public void lay(MapMesh m, Random rnd, Coord lc, Coord gc) {
@@ -416,7 +430,10 @@ public class WaterTile extends Tiler {
 	smod.new Face(v[d.f[3]], v[d.f[4]], v[d.f[5]]);
 	Bottom b = m.data(Bottom.id);
 	MPart bd = MPart.splitquad(lc, gc, b.fortilea(lc), ms.split[ms.ts.o(lc)]);
-	bd.mat = botmat;
+	if (UseDeepFog)
+	    bd.mat = botmatDeep;
+	else
+	    bd.mat = botmat;
 	bottom.faces(m, bd);
     }
     
@@ -428,7 +445,10 @@ public class WaterTile extends Tiler {
 		MapMesh.MapSurface ms = m.data(MapMesh.gnd);
 		Bottom b = m.data(Bottom.id);
 		MPart d = MPart.splitquad(lc, gc, b.fortilea(lc), ms.split[ms.ts.o(lc)]);
-		d.mat = botmat;
+		if (UseDeepFog)
+		    d.mat = botmatDeep;
+		else
+		    d.mat = botmat;
 		((CTrans)bottom).tcons(z, bmask, cmask).faces(m, d);
 	    }
 	} else {

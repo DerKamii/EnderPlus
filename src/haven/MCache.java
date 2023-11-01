@@ -724,6 +724,17 @@ public class MCache implements MapSource {
 
     public MCache(Session sess) {
 	this.sess = sess;
+	CFG.Observer<Boolean> change = cfg -> {
+	    synchronized (this.grids) {
+		for (Grid g : this.grids.values()) {
+		    for (int x = 0; x < cutn.x; x++) {
+			for (int y = 0; y < cutn.y; y++)
+			    g.buildcut(new Coord(x, y));
+		    }
+		}
+	    }
+	};
+	CFG.FLATTEN_TERRAIN.observe(change);
     }
 
     public void ctick(double dt) {
@@ -790,8 +801,13 @@ public class MCache implements MapSource {
 	Grid g = getgridt(tc);
 	return(g.gettile(tc.sub(g.ul)));
     }
-
+    public double getfz2(Coord tc) {
+	Grid g = getgridt(tc);
+	return(g.getz(tc.sub(g.ul)));
+    }
     public double getfz(Coord tc) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+		return 0.0D;
 	Grid g = getgridt(tc);
 	return(g.getz(tc.sub(g.ul)));
     }
@@ -811,10 +827,14 @@ public class MCache implements MapSource {
     }
 
     public double getcz(Coord2d pc) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    return 0.0F;
 	return(getcz(pc.x, pc.y));
     }
 
     public float getcz(float px, float py) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    return 0.0F;
 	return((float)getcz((double)px, (double)py));
     }
 
@@ -823,6 +843,8 @@ public class MCache implements MapSource {
     }
 
     public Coord3f getzp(Coord2d pc) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    return(Coord3f.of((float)pc.x, (float)pc.y, 0.0F));
 	return(Coord3f.of((float)pc.x, (float)pc.y, (float)getcz(pc)));
     }
 
@@ -840,6 +862,8 @@ public class MCache implements MapSource {
     }
 
     public double getz(SurfaceID id, Coord2d pc) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    return 0.0F;
 	Coord tc = pc.floor(tilesz);
 	Grid g = getgridt(tc);
 	MapMesh cut = g.getcut(tc.sub(g.ul).div(cutsz));
@@ -848,6 +872,8 @@ public class MCache implements MapSource {
     }
 
     public Coord3f getzp(SurfaceID id, Coord2d pc) {
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    return(Coord3f.of((float)pc.x, (float)pc.y, 0.0F));
 	return(Coord3f.of((float)pc.x, (float)pc.y, (float)getz(id, pc)));
     }
 

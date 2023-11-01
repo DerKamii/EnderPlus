@@ -1060,6 +1060,9 @@ public class OptWnd extends WindowX {
 	panel.add(new CFGBox("Show flavor objects", CFG.DISPLAY_FLAVOR, "Requires restart"), x, y);
 	
 	y += STEP;
+	panel.add(new CFGBox("Flatten terrain", CFG.FLATTEN_TERRAIN), x, y);
+	
+	y += STEP;
 	panel.add(new CFGBox("Simple crops", CFG.SIMPLE_CROPS, "Requires area reload"), x, y);
 	
 	y += STEP;
@@ -1086,6 +1089,20 @@ public class OptWnd extends WindowX {
 		public void changed() {
 			CFG.CUPBOARD_HEIGHT.set(val);
 		}
+	}, x, y);
+ 
+	y += STEP;
+	panel.add(new Label("Palisade Height (needs restart)"), x, y);
+ 
+	y += STEP;
+	panel.add(new HSlider(UI.scale(160), 15, 100, CFG.PALISADE_HEIGHT.get()) {
+	    protected void attach(UI ui) {
+		super.attach(ui);
+		val = CFG.PALISADE_HEIGHT.get();
+	    }
+	    public void changed() {
+		CFG.PALISADE_HEIGHT.set(val);
+	    }
 	}, x, y);
 
 	y += STEP;

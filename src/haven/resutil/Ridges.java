@@ -155,11 +155,11 @@ public class Ridges implements MapMesh.ConsHooks {
 	for(c.y = 0; c.y <= m.sz.y; c.y++) {
 	    for(c.x = 0; c.x <= m.sz.x; c.x++) {
 		Coord tc = m.ul.add(c);
-		double ul = m.map.getfz(tc);
-		double xd = Math.abs(ul - m.map.getfz(tc.add(1, 0)));
+		double ul = m.map.getfz2(tc);
+		double xd = Math.abs(ul - m.map.getfz2(tc.add(1, 0)));
 		if((xd > bz[ts.o(c.x, c.y)]) && (xd > bz[ts.o(c.x, c.y - 1)]))
 		    breaks[eo(c, 0)] = true;
-		double yd = Math.abs(ul - m.map.getfz(tc.add(0, 1)));
+		double yd = Math.abs(ul - m.map.getfz2(tc.add(0, 1)));
 		if((yd > bz[ts.o(c.x, c.y)]) && (yd > bz[ts.o(c.x - 1, c.y)]))
 		    breaks[eo(c, 3)] = true;
 	    }
@@ -178,7 +178,7 @@ public class Ridges implements MapMesh.ConsHooks {
     private static final Coord[] tccs = {new Coord(0, 0), new Coord(1, 0), new Coord(1, 1), new Coord(0, 1)};
     private boolean edgelc(Coord tc, int e) {
 	Coord gc = tc.add(m.ul);
-	return(m.map.getfz(gc.add(tccs[e])) < m.map.getfz(gc.add(tccs[(e + 1) % 4])));
+	return(m.map.getfz2(gc.add(tccs[e])) < m.map.getfz2(gc.add(tccs[(e + 1) % 4])));
     }
 
     private Vertex[] makeedge(Coord tc, int e) {
@@ -187,11 +187,18 @@ public class Ridges implements MapMesh.ConsHooks {
 	if(e == 2)
 	    return(makeedge(tc.add(0, 1), 0));
 	float eds = edgelc(tc, e)?1:-1;
-	float lo, hi; {
-	    Coord gc = tc.add(m.ul);
-	    float z1 = (float)m.map.getfz(gc.add(tccs[e])), z2 = (float)m.map.getfz(gc.add(tccs[(e + 1) % 4]));
-	    lo = Math.min(z1, z2); hi = Math.max(z1, z2);
+	float lo, hi;
+	
+	Coord gc = tc.add(m.ul);
+	float z1 = (float)m.map.getfz2(gc.add(tccs[e])), z2 = (float)m.map.getfz2(gc.add(tccs[(e + 1) % 4]));
+	lo = Math.min(z1, z2); hi = Math.max(z1, z2);
+ 
+	if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	{
+	    lo = 0.0F;
+	    hi = 10F;
 	}
+	
 	int nseg = Math.max((int)Math.round((hi - lo) / segh), 2) - 1;
 	Vertex[] ret = new Vertex[nseg + 1];
 	Coord3f base = new Coord3f(tc.add(tccs[e]).add(tc.add(tccs[(e + 1) % 4])).mul(tilesz).mul(1, -1)).div(2); base.z = lo;
@@ -247,7 +254,7 @@ public class Ridges implements MapMesh.ConsHooks {
     private float[] tczs(Coord tc) {
 	float[] ret = new float[4];
 	for(int i = 0; i < 4; i++)
-	    ret[i] = (float)m.map.getfz(tc.add(m.ul).add(tccs[i]));
+	    ret[i] = (float)m.map.getfz2(tc.add(m.ul).add(tccs[i]));
 	return(ret);
     }
 
@@ -271,9 +278,9 @@ public class Ridges implements MapMesh.ConsHooks {
 	if(b[0] && b[1] && b[2] && b[3]) {
 	    Coord gc = tc.add(m.ul);
 	    double bz = ((RidgeTile)m.map.tiler(m.map.gettile(gc))).breakz() + EPSILON;
-	    if(Math.abs(m.map.getfz(gc) - m.map.getfz(gc.add(1, 1))) <= bz)
+	    if(Math.abs(m.map.getfz2(gc) - m.map.getfz2(gc.add(1, 1))) <= bz)
 		return(0);
-	    if(Math.abs(m.map.getfz(gc.add(0, 1)) - m.map.getfz(gc.add(1, 0))) <= bz)
+	    if(Math.abs(m.map.getfz2(gc.add(0, 1)) - m.map.getfz2(gc.add(1, 0))) <= bz)
 		return(1);
 	}
 	return(-1);
@@ -527,6 +534,14 @@ public class Ridges implements MapMesh.ConsHooks {
 	    }
 	    zs = Utils.splice(zs, 0, n);
 	    Arrays.sort(zs);
+	    if (((Boolean)CFG.FLATTEN_TERRAIN.get()).booleanValue())
+	    {
+		zs[0] = 0F;
+		zs[1] = 0F;
+		zs[2] = 10F;
+		if (zs.length > 3)
+		    zs[3] = 10F;
+	    }
 	    col = new Coord3f[n];
 	    float tcx = tc.x * tilesz.x + (tilesz.x / 2.0f), tcy = -(tc.y * tilesz.y + (tilesz.y / 2.0f));
 	    Random rnd = m.rnd(tc);
